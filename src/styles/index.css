@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@variant dark (&:where(.dark, .dark *));
+
+/* =========================
+   Animations
+========================= */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(20px, -15px);
+  }
+
+  50% {
+    transform: translate(-10px, 20px);
+  }
+
+  75% {
+    transform: translate(-20px, -10px);
+  }
+}
+
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
+
+/* =========================
+   Utilities
+========================= */
+
+@utility animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+@utility animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* =========================
+   Browser Overrides
+========================= */
+
+/* Remove number input arrows - Chrome, Edge, Safari */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove number input arrows - Firefox */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
