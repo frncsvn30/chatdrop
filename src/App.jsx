@@ -20,6 +20,7 @@ function App() {
       {roomConfig ? (
         <ChatRoomPage
           roomCode="A8F3D2"
+          roomName={roomConfig.roomName}
           durationSeconds={roomConfig.durationSeconds}
           userAlias={roomConfig.alias}
           maxParticipants={roomConfig.maxParticipants}

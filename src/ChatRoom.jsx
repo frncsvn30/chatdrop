@@ -10,7 +10,7 @@ import {
   CheckIcon,
 } from "@heroicons/react/24/outline";
 
-function ChatRoomPage({ roomCode = "A8F3D2", durationSeconds = 300, userAlias = "Anonymous", maxParticipants = 2, onLeave = () => {} }) {
+function ChatRoomPage({ roomCode = "A8F3D2", roomName, durationSeconds = 300, userAlias = "Anonymous", maxParticipants = 2, onLeave = () => {} }) {
   const [isDark, setIsDark] = useState(true);
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const [copied, setCopied] = useState(false);
@@ -94,14 +94,14 @@ function ChatRoomPage({ roomCode = "A8F3D2", durationSeconds = 300, userAlias = 
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/60 backdrop-blur-sm border border-neutral-200 dark:border-white/10 dark:bg-white/5">
               <UserGroupIcon className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-neutral-900 dark:text-white">
-                Room #{roomCode}
-              </p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {participants.length} people here
-              </p>
-            </div>
+          <div>
+            <p className="text-sm font-semibold capitalize text-neutral-900 dark:text-white">
+              {roomName || `Room #${roomCode}`}
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              {participants.length} people here
+            </p>
+          </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ function ChatRoomPage({ roomCode = "A8F3D2", durationSeconds = 300, userAlias = 
                   <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${p.color}`}>
                     {p.initials}
                   </div>
-                  <span className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  <span className="truncate text-sm font-medium capitalize  text-neutral-800 dark:text-neutral-200">
                     {p.name}
                   </span>
                   <span className="ml-auto h-2 w-2 rounded-full bg-emerald-500" />

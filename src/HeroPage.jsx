@@ -19,7 +19,9 @@ import { CheckIcon } from "@heroicons/react/24/solid";
 
 function HeroPage({ onStartRoom }) {
     const [isDark, setIsDark] = useState(true);
+    const [roomNameError, setRoomNameError] = useState("");
     const [aliasError, setAliasError] = useState("");
+    const [showAliasModal, setShowAliasModal] = useState(false);
 
     useEffect(() => {
         document.documentElement.classList.toggle('dark', isDark);
@@ -33,9 +35,39 @@ function HeroPage({ onStartRoom }) {
         { label: "1 Hour", seconds: 3600 },
     ];
 
+    const [roomName, setRoomName] = useState("");
     const [alias, setAlias] = useState("");
     const [duration, setDuration] = useState(durations[0]);
     const [maxParticipants, setMaxParticipants] = useState(2);
+
+    const handleStartRoomClick = () => {
+        if (!roomName.trim()) {
+            setRoomNameError("Please enter a room name");
+            return;
+        }
+        setShowAliasModal(true);
+    };
+
+    const handleModalStartRoom = () => {
+        if (!alias.trim()) {
+            setAliasError("Please enter your alias");
+            return;
+        }
+        onStartRoom({
+            alias: alias.trim(),
+            roomName: roomName.trim(),
+            durationSeconds: duration.seconds,
+            maxParticipants,
+        });
+        setShowAliasModal(false);
+        setAlias("");
+        setAliasError("");
+    };
+
+    const handleModalClose = () => {
+        setShowAliasModal(false);
+        setAliasError("");
+    };
 
     return (
         <div className="relative min-h-screen overflow-hidden">
@@ -127,35 +159,34 @@ function HeroPage({ onStartRoom }) {
                                 Configure your temporary workspace. All parameters are immutable once created.
                             </p>
 
-{/* Alias input */}
+{/* Room name input */}
                              <div className="mt-6">
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                                    Your Alias
+                                    Room Name
                                 </label>
 
                                 <div className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition-colors focus-within:ring-2 dark:bg-neutral-900 ${
-                                    aliasError ? "border-red-400 focus-within:border-red-400 focus-within:ring-red-200 dark:border-red-500/50" : "border-neutral-200 focus-within:border-neutral-400 focus-within:ring-neutral-200 dark:border-neutral-800"
+                                    roomNameError ? "border-red-400 focus-within:border-red-400 focus-within:ring-red-200 dark:border-red-500/50" : "border-neutral-200 focus-within:border-neutral-400 focus-within:ring-neutral-200 dark:border-neutral-800"
                                 }`}>
-                                    <UserIcon className={`h-5 w-5 ${aliasError ? "text-red-400" : "text-neutral-400 dark:text-neutral-500"}`} />
+                                    <UserIcon className={`h-5 w-5 ${roomNameError ? "text-red-400" : "text-neutral-400 dark:text-neutral-500"}`} />
 
                                     <input
                                         type="text"
-                                        value={alias}
+                                        value={roomName}
                                         onChange={(e) => {
-                                            setAlias(e.target.value);
-                                            if (e.target.value.trim()) setAliasError("");
+                                            setRoomName(e.target.value);
+                                            if (e.target.value.trim()) setRoomNameError("");
                                         }}
-                                        placeholder="e.g. Anonymous Ghost"
+                                        placeholder="e.g. Design Hangout"
                                         className="w-full bg-transparent font-medium text-neutral-900 text-sm outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 dark:text-white"
                                     />
                                 </div>
-                                {aliasError && (
-                                    <p className="mt-1 px-3 text-xs text-left text-red-500 dark:text-red-400">{aliasError}</p>
+                                {roomNameError && (
+                                    <p className="mt-1 px-3 text-xs text-left text-red-500 dark:text-red-400">{roomNameError}</p>
                                 )}
                             </div>
-
                             {/* Duration + participants */}
-                            <div className="mt-4 grid grid-cols-2 gap-4">
+                            <div className="mt-6 grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                                         Room Duration
@@ -242,18 +273,12 @@ function HeroPage({ onStartRoom }) {
                             </div>
 
 {/* CTA */}
-                              <button onClick={() => {
-                                if (!alias.trim()) {
-                                    setAliasError("Please enter your alias");
-                                    return;
-                                }
-                                onStartRoom({ alias: alias.trim(), durationSeconds: duration.seconds, maxParticipants });
-                            }} className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3.5 font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
-                                 Start Temporary Room
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                     <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-                                 </svg>
-                             </button>
+                              <button onClick={handleStartRoomClick} className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3.5 font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
+                                  Start Temporary Room
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                                  </svg>
+                              </button>
                         </div>
 
                         {/* Card 2 — Join Existing */}
@@ -302,12 +327,61 @@ function HeroPage({ onStartRoom }) {
                             </div>
                         </div>
 
+                        </div>
                     </div>
+
+                    {showAliasModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleModalClose} />
+                            <div className="relative w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-neutral-900">
+                                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                                    Set Your Alias
+                                </h3>
+                                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                                    Choose a nickname for "{roomName}". This will be visible to other participants.
+                                </p>
+
+                                <div className={`mt-5 flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition-colors focus-within:ring-2 dark:bg-neutral-900 ${
+                                    aliasError ? "border-red-400 focus-within:border-red-400 focus-within:ring-red-200 dark:border-red-500/50" : "border-neutral-200 focus-within:border-neutral-400 focus-within:ring-neutral-200 dark:border-neutral-800"
+                                }`}>
+                                    <UserIcon className={`h-5 w-5 ${aliasError ? "text-red-400" : "text-neutral-400 dark:text-neutral-500"}`} />
+
+                                    <input
+                                        type="text"
+                                        value={alias}
+                                        onChange={(e) => {
+                                            setAlias(e.target.value);
+                                            if (e.target.value.trim()) setAliasError("");
+                                        }}
+                                        placeholder="e.g. Anonymous Ghost"
+                                        className="w-full bg-transparent font-medium text-neutral-900 text-sm outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 dark:text-white"
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                handleModalStartRoom();
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                {aliasError && (
+                                    <p className="mt-1 px-3 text-xs text-left text-red-500 dark:text-red-400">{aliasError}</p>
+                                )}
+
+                                <div className="mt-6 flex gap-3">
+                                    <button onClick={handleModalClose} className="flex-1 cursor-pointer rounded-xl border border-neutral-200 py-3 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-white/5 dark:text-neutral-200 dark:hover:bg-white/10">
+                                        Cancel
+                                    </button>
+                                    <button onClick={handleModalStartRoom} className="flex-[2] cursor-pointer rounded-xl bg-neutral-900 py-3 font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
+                                        Join Room
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-        </div>
     );
 }
 
 export default HeroPage;
-
