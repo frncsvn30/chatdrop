@@ -164,11 +164,28 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
 
     const resize = () => {
       const canvas = canvasRef.current;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      canvas.width = w;
+      canvas.height = h;
+
+      const aspect = w / h;
+      camera.aspect = aspect;
+
+      const baseFov = 45;
+      const computedFov = aspect < 1 ? baseFov / aspect : baseFov;
+      camera.fov = Math.min(computedFov, 100);
+
+      // TEMP: exaggerated tilt to confirm this is actually taking effect
+      const tilt = aspect < 1 ? (1 - aspect) * 60 : 0; // bumped from 20 → 60
+      camera.position.set(0, 16, cameraZ);
+      camera.lookAt(new THREE.Vector3(0, 28 - tilt, 0));
+
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      console.log('resize fired', { aspect, tilt, fov: camera.fov }); // TEMP debug log
+
+      renderer.setSize(w, h);
     };
 
     const render = () => {

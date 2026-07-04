@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ui components
-import TypewriterText from './styles/components/TypeWriter';
+import TypewriterText from './components/TypeWriter';
 import { GLSLHills } from "@/components/ui/glsl-hills";
 
 // headless ui
@@ -17,22 +17,25 @@ import {
 
 import { CheckIcon } from "@heroicons/react/24/solid";
 
-function HeroPage() {
+function HeroPage({ onStartRoom }) {
     const [isDark, setIsDark] = useState(true);
+    const [aliasError, setAliasError] = useState("");
 
     useEffect(() => {
         document.documentElement.classList.toggle('dark', isDark);
     }, [isDark]);
 
     const durations = [
-        "5 Minutes",
-        "10 Minutes",
-        "15 Minutes",
-        "30 Minutes",
-        "1 Hour",
+        { label: "5 Minutes", seconds: 300 },
+        { label: "10 Minutes", seconds: 600 },
+        { label: "15 Minutes", seconds: 900 },
+        { label: "30 Minutes", seconds: 1800 },
+        { label: "1 Hour", seconds: 3600 },
     ];
 
+    const [alias, setAlias] = useState("");
     const [duration, setDuration] = useState(durations[0]);
+    const [maxParticipants, setMaxParticipants] = useState(2);
 
     return (
         <div className="relative min-h-screen overflow-hidden">
@@ -124,21 +127,31 @@ function HeroPage() {
                                 Configure your temporary workspace. All parameters are immutable once created.
                             </p>
 
-                            {/* Alias input */}
-                            <div className="mt-6">
+{/* Alias input */}
+                             <div className="mt-6">
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                                     Your Alias
                                 </label>
 
-                                    <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
-                                    <UserIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                                <div className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition-colors focus-within:ring-2 dark:bg-neutral-900 ${
+                                    aliasError ? "border-red-400 focus-within:border-red-400 focus-within:ring-red-200 dark:border-red-500/50" : "border-neutral-200 focus-within:border-neutral-400 focus-within:ring-neutral-200 dark:border-neutral-800"
+                                }`}>
+                                    <UserIcon className={`h-5 w-5 ${aliasError ? "text-red-400" : "text-neutral-400 dark:text-neutral-500"}`} />
 
                                     <input
                                         type="text"
+                                        value={alias}
+                                        onChange={(e) => {
+                                            setAlias(e.target.value);
+                                            if (e.target.value.trim()) setAliasError("");
+                                        }}
                                         placeholder="e.g. Anonymous Ghost"
-                                        className="w-full bg-transparent font-medium text-sm text-neutral-900 placeholder:text-neutral-400 outline-none dark:text-white dark:placeholder:text-neutral-500"
+                                        className="w-full bg-transparent font-medium text-neutral-900 text-sm outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 dark:text-white"
                                     />
                                 </div>
+                                {aliasError && (
+                                    <p className="mt-1 px-3 text-xs text-left text-red-500 dark:text-red-400">{aliasError}</p>
+                                )}
                             </div>
 
                             {/* Duration + participants */}
@@ -153,7 +166,7 @@ function HeroPage() {
                                             <Listbox.Button className="group flex h-12 w-full items-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 transition-all hover:border-neutral-300 focus:outline-none focus-visible:border-neutral-400 focus-visible:ring-2 focus-visible:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white dark:hover:border-neutral-700 dark:focus-visible:border-neutral-500 dark:focus-visible:ring-neutral-800">
                                                 <ClockIcon className="mr-3 h-5 w-5 shrink-0 text-neutral-400 dark:text-neutral-500" />
 
-                                                <span className="flex-1 text-left">{duration}</span>
+                                                <span className="flex-1 text-left">{duration.label}</span>
 
                                                 <ChevronUpDownIcon className="h-5 w-5 text-neutral-400 transition group-hover:text-neutral-500 dark:text-neutral-500 dark:group-hover:text-neutral-400" />
                                             </Listbox.Button>
@@ -161,7 +174,7 @@ function HeroPage() {
                                             <Listbox.Options className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-neutral-200 bg-white p-1 shadow-xl ring-1 ring-black/5 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900">
                                                 {durations.map((item) => (
                                                     <Listbox.Option
-                                                        key={item}
+                                                        key={item.label}
                                                         value={item}
                                                         className={({ active }) =>
                                                             `relative cursor-pointer select-none rounded-lg px-3 py-2 text-sm transition ${active
@@ -177,7 +190,7 @@ function HeroPage() {
                                                                         selected ? "font-medium text-neutral-900 dark:text-white" : ""
                                                                     }
                                                                 >
-                                                                    {item}
+                                                                    {item.label}
                                                                 </span>
 
                                                                         {selected && (
@@ -196,27 +209,51 @@ function HeroPage() {
                                         Max Participants
                                     </label>
 
-                                <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
-                                        <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
-
-                                        <input
-                                            type="number"
-                                            min="2"
-                                            max="20"
-                                            defaultValue={2}
-                                            className="w-full bg-transparent font-medium text-sm text-neutral-900 outline-none dark:text-white"
-                                        />
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
+                                            <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                                            <input
+                                                type="number"
+                                                min="2"
+                                                max="20"
+                                                value={maxParticipants}
+                                                onChange={(e) => setMaxParticipants(Math.max(2, Math.min(20, parseInt(e.target.value) || 2)))}
+                                                className="w-full bg-transparent font-medium text-sm text-neutral-900 outline-none dark:text-white"
+                                            />
+                                        </div>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMaxParticipants(Math.max(2, maxParticipants - 1))}
+                                                className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                            >
+                                                -
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMaxParticipants(Math.min(20, maxParticipants + 1))}
+                                                className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* CTA */}
-                            <button className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3.5 font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
-                                Start Temporary Room
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-                                </svg>
-                            </button>
+{/* CTA */}
+                              <button onClick={() => {
+                                if (!alias.trim()) {
+                                    setAliasError("Please enter your alias");
+                                    return;
+                                }
+                                onStartRoom({ alias: alias.trim(), durationSeconds: duration.seconds, maxParticipants });
+                            }} className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3.5 font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
+                                 Start Temporary Room
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                     <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                                 </svg>
+                             </button>
                         </div>
 
                         {/* Card 2 — Join Existing */}
@@ -235,31 +272,32 @@ function HeroPage() {
                                 </label>
                                 <div className="flex items-center justify-center gap-3 rounded-xl border border-neutral-200 bg-white/50 py-4 dark:border-white/10 dark:bg-black/30">
                                     {Array.from({ length: 6 }).map((_, i) => (
-                                        <span
+                                        <input
                                             key={i}
-                                            className="flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 text-sm text-neutral-400 dark:border-white/10 dark:text-neutral-600"
-                                        >
-                                            0
-                                        </span>
+                                            type="text"
+                                            maxLength={1}
+                                            placeholder="-"
+                                            className="flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-transparent text-center font-medium text-sm text-neutral-900 outline-none dark:border-white/10 dark:text-white"
+                                        />
                                     ))}
                                 </div>
                             </div>
 
                             {/* CTA */}
-                            <button className="mt-6 w-full cursor-pointer rounded-xl border border-neutral-200 bg-white py-3.5 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-transparent dark:text-neutral-200 dark:hover:bg-white/5">
+                            <button className="mt-6 w-full cursor-pointer rounded-xl border border-neutral-200 bg-white py-3.5 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-white/5 dark:text-neutral-200 dark:hover:bg-white/10">
                                 Join Session
                             </button>
 
                             {/* Verified protocol badge */}
-                            <div className="mt-auto flex items-center gap-3 pt-6">
+                            <div className="mt-auto flex items-center text-left gap-3 pt-6">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-neutral-900 dark:text-white">Verified Protocol</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">AES-256 GCM Encryption</p>
+                                    <p className="text-sm font-medium text-neutral-900 dark:text-white">Private Room Codes</p>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">Messages deleted after expiration</p>
                                 </div>
                             </div>
                         </div>

@@ -1,16 +1,33 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 
 // Pages
 import HeroPage from './HeroPage';
+import ChatRoomPage from './ChatRoom';
 
 function App() {
+  const [roomConfig, setRoomConfig] = useState(null);
+
+  const handleStartRoom = (config) => {
+    setRoomConfig(config);
+  };
+
+  const handleLeaveRoom = () => {
+    setRoomConfig(null);
+  };
 
   return (
-    <>  
-        <HeroPage></HeroPage>
+    <>
+      {roomConfig ? (
+        <ChatRoomPage
+          roomCode="A8F3D2"
+          durationSeconds={roomConfig.durationSeconds}
+          userAlias={roomConfig.alias}
+          maxParticipants={roomConfig.maxParticipants}
+          onLeave={handleLeaveRoom}
+        />
+      ) : (
+        <HeroPage onStartRoom={handleStartRoom} />
+      )}
     </>
   )
 }
