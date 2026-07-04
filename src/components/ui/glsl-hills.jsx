@@ -1,15 +1,19 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize = 256, speed = 0.5 }) => {
+const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize = 256, speed = 0.5, dark = true }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const rendererRef = useRef(null);
+  const materialRef = useRef(null);
 
+  // Build the scene once
   useEffect(() => {
     class Plane {
       constructor() {
         this.uniforms = {
           time: { type: 'f', value: 0 },
+          color: { value: new THREE.Color(dark ? 0xe5e5e5 : 0x1a1a1a) }, // slightly softer white lines too
         };
         this.mesh = this.createMesh();
         this.time = speed;
@@ -132,10 +136,10 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
               precision highp float;
               #define GLSLIFY 1
               varying vec3 vPosition;
+              uniform vec3 color;
 
               void main(void) {
                 float opacity = (96.0 - length(vPosition)) / 256.0 * 0.6;
-                vec3 color = vec3(0.6);
                 gl_FragColor = vec4(color, opacity);
               }
             `,
@@ -150,10 +154,13 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
     }
 
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: false });
+    rendererRef.current = renderer;
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
     const clock = new THREE.Clock();
     const plane = new Plane();
+    materialRef.current = plane.mesh.material;
 
     const resize = () => {
       const canvas = canvasRef.current;
@@ -176,7 +183,7 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
 
     const init = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setClearColor(0x000000, 0);
+      renderer.setClearColor(dark ? 0x0d0d0d : 0xffffff, 1);
       camera.position.set(0, 16, cameraZ);
       camera.lookAt(new THREE.Vector3(0, 28, 0));
       scene.add(plane.mesh);
@@ -190,7 +197,18 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
     return () => {
       window.removeEventListener('resize', resize);
     };
-  }, [cameraZ, planeSize, speed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraZ, planeSize, speed]); // intentionally excludes `dark` — handled below without rebuilding the scene
+
+  // React to dark mode toggles without tearing down the WebGL context
+  useEffect(() => {
+    if (rendererRef.current) {
+      rendererRef.current.setClearColor(dark ? 0x0d0d0d : 0xffffff, 1);
+    }
+    if (materialRef.current) {
+      materialRef.current.uniforms.color.value.set(dark ? 0xe5e5e5 : 0x1a1a1a);
+    }
+  }, [dark]);
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width, height }}>

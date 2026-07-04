@@ -39,7 +39,8 @@ function HeroPage() {
 
             {/* background */}
             <div className="absolute inset-0 z-0">
-                <GLSLHills/>
+                <GLSLHills dark={isDark} />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,transparent_40%,#ffffff_100%)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,transparent_40%,#0d0d0d_100%)]" />
             </div>
 
             <div className="relative z-10 mx-auto min-h-screen w-full max-w-7xl px-6 md:px-8 lg:px-12">
@@ -129,7 +130,7 @@ function HeroPage() {
                                     Your Alias
                                 </label>
 
-                                    <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-xs transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
+                                    <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
                                     <UserIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
 
                                     <input
@@ -149,7 +150,7 @@ function HeroPage() {
 
                                     <Listbox value={duration} onChange={setDuration}>
                                         <div className="relative">
-                                            <Listbox.Button className="group flex h-12 w-full items-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 shadow-xs transition-all hover:border-neutral-300 focus:outline-none focus-visible:border-neutral-400 focus-visible:ring-2 focus-visible:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white dark:hover:border-neutral-700 dark:focus-visible:border-neutral-500 dark:focus-visible:ring-neutral-800">
+                                            <Listbox.Button className="group flex h-12 w-full items-center rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 transition-all hover:border-neutral-300 focus:outline-none focus-visible:border-neutral-400 focus-visible:ring-2 focus-visible:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white dark:hover:border-neutral-700 dark:focus-visible:border-neutral-500 dark:focus-visible:ring-neutral-800">
                                                 <ClockIcon className="mr-3 h-5 w-5 shrink-0 text-neutral-400 dark:text-neutral-500" />
 
                                                 <span className="flex-1 text-left">{duration}</span>
@@ -195,7 +196,7 @@ function HeroPage() {
                                         Max Participants
                                     </label>
 
-                                <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-xs transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
+                                <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
                                         <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
 
                                         <input
@@ -210,7 +211,7 @@ function HeroPage() {
                             </div>
 
                             {/* CTA */}
-                            <button className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-neutral-300 py-3.5 font-medium text-neutral-950 transition hover:bg-neutral-200 dark:bg-neutral-300 dark:hover:bg-neutral-200">
+                            <button className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3.5 font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
                                 Start Temporary Room
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
@@ -245,7 +246,7 @@ function HeroPage() {
                             </div>
 
                             {/* CTA */}
-                            <button className="mt-6 w-full cursor-pointer rounded-xl bg-neutral-100 py-3.5 font-medium text-neutral-400 transition dark:bg-white/5 dark:text-neutral-500">
+                            <button className="mt-6 w-full cursor-pointer rounded-xl border border-neutral-200 bg-white py-3.5 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-transparent dark:text-neutral-200 dark:hover:bg-white/5">
                                 Join Session
                             </button>
 
