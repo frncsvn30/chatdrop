@@ -266,14 +266,14 @@ function ChatRoomPage({
   const peopleHere = participants.length || (createdAt ? 1 : 0);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden">
 
       {/* background */}
       <div className="absolute inset-0 z-0">
         <GLSLHills dark={isDark} />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 md:px-8 lg:px-12">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col px-6 md:px-8 lg:px-12">
 
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4 py-6">
@@ -352,7 +352,7 @@ function ChatRoomPage({
         </header>
 
         {/* Main content: participants + chat */}
-        <div className="flex flex-1 gap-6 pb-6">
+        <div className="flex min-h-0 flex-1 gap-6 pb-6">
 
           {/* Participants panel */}
           <aside className="hidden w-56 shrink-0 flex-col rounded-2xl border border-neutral-200 bg-white/60 p-4 backdrop-blur-xl shadow-xs dark:border-white/10 dark:bg-white/[0.03] md:flex">
@@ -382,10 +382,10 @@ function ChatRoomPage({
           </aside>
 
           {/* Chat panel */}
-          <div className="flex flex-1 flex-col rounded-2xl border border-neutral-200 bg-white/60 backdrop-blur-xl shadow-xs dark:border-white/10 dark:bg-white/[0.03]">
+          <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-neutral-200 bg-white/60 backdrop-blur-xl shadow-xs dark:border-white/10 dark:bg-white/[0.03]">
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-6">
+            <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
               {messages.length === 0 && (
                 <p className="text-center text-sm text-neutral-400 dark:text-neutral-500">
                   No messages yet — say hello 👋
