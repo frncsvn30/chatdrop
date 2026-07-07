@@ -385,16 +385,16 @@ function ChatRoomPage({
           <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-neutral-200 bg-white/60 backdrop-blur-xl shadow-xs dark:border-white/10 dark:bg-white/[0.03]">
 
             {/* Messages */}
-            <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+            <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-6">
               {messages.length === 0 && (
                 <p className="text-center text-sm text-neutral-400 dark:text-neutral-500">
                   No messages yet — say hello 👋
                 </p>
               )}
-              {messages.map((m) => {
+              {messages.map((m, i) => {
                 if (m.system) {
                   return (
-                    <div key={m.id} className="flex justify-center">
+                    <div key={m.id} className="mt-4 flex justify-center">
                       <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
                         {m.text}
                         <span className="ml-2 text-[10px] text-neutral-400 dark:text-neutral-500">{m.time}</span>
@@ -403,10 +403,12 @@ function ChatRoomPage({
                   );
                 }
                 const isMe = m.senderId === senderId;
+                const prev = messages[i - 1];
+                const grouped = prev && !prev.system && !m.system && prev.senderId === m.senderId;
                 return (
-                  <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"} ${grouped ? "mt-1" : "mt-4"}`}>
                     <div className={`max-w-xs md:max-w-sm ${isMe ? "items-end" : "items-start"} flex flex-col`}>
-                      {!isMe && (
+                      {!isMe && !grouped && (
                         <span className="mb-1 px-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">
                           {m.user}
                         </span>
