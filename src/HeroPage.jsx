@@ -241,7 +241,7 @@ function HeroPage({ onStartRoom }) {
                                     </label>
 
                                     <div className="relative">
-                                        <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-500 dark:focus-within:ring-neutral-800">
+                                        <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 transition-colors focus-within:border-neutral-400 focus-within:ring-2 focus-within:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:focus-within:border-neutral-800">
                                             <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
                                             <input
                                                 type="number"
