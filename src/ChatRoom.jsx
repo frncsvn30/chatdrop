@@ -60,6 +60,7 @@ function ChatRoomPage({
   const messagesRef = useRef([]);
   const [participants, setParticipants] = useState([]);
   const [createdAt, setCreatedAt] = useState(createdAtProp);
+  const [roomDuration, setRoomDuration] = useState(durationSeconds);
   const [closed, setClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
 
@@ -104,10 +105,13 @@ function ChatRoomPage({
           createdAtRef.current = payload.createdAt;
           setCreatedAt(payload.createdAt);
         }
+        if (payload.durationSeconds) {
+          setRoomDuration(payload.durationSeconds);
+        }
       })
       .on("broadcast", { event: "request-info" }, () => {
         if (createdAtRef.current) {
-          channel.send({ type: "broadcast", event: "room-info", payload: { createdAt: createdAtRef.current } });
+          channel.send({ type: "broadcast", event: "room-info", payload: { createdAt: createdAtRef.current, durationSeconds: roomDuration } });
         }
       })
       .on("broadcast", { event: "room-closed" }, () => {
@@ -171,7 +175,7 @@ function ChatRoomPage({
         if (status !== "SUBSCRIBED") return;
         await channel.track({ senderId, alias: aliasRef.current, joinedAt: Date.now() });
         if (createdAtRef.current) {
-          channel.send({ type: "broadcast", event: "room-info", payload: { createdAt: createdAtRef.current } });
+          channel.send({ type: "broadcast", event: "room-info", payload: { createdAt: createdAtRef.current, durationSeconds: roomDuration } });
         } else {
           channel.send({ type: "broadcast", event: "request-info", payload: {} });
           // Fallback: if no one shares the room's createdAt, start our own clock
@@ -194,7 +198,7 @@ function ChatRoomPage({
   useEffect(() => {
     if (closed || !createdAt) return;
     const tick = () => {
-      const left = Math.max(0, Math.round((createdAt + durationSeconds * 1000 - Date.now()) / 1000));
+      const left = Math.max(0, Math.round((createdAt + roomDuration * 1000 - Date.now()) / 1000));
       setTimeLeft(left);
       if (left <= 0) {
         if (channelRef.current) {
@@ -209,7 +213,7 @@ function ChatRoomPage({
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [createdAt, durationSeconds, closed]);
+  }, [createdAt, roomDuration, closed]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);

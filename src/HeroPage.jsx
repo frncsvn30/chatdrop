@@ -17,7 +17,9 @@ import {
 
 import { CheckIcon } from "@heroicons/react/24/solid";
 
-function HeroPage({ onStartRoom }) {
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+
+function HeroPage({ onStartRoom, onJoinSession }) {
     const [isDark, setIsDark] = useState(true);
     const [roomNameError, setRoomNameError] = useState("");
     const [aliasError, setAliasError] = useState("");
@@ -39,6 +41,9 @@ function HeroPage({ onStartRoom }) {
     const [alias, setAlias] = useState("");
     const [duration, setDuration] = useState(durations[0]);
     const [maxParticipants, setMaxParticipants] = useState(2);
+    const [joinCode, setJoinCode] = useState("");
+    const [joinCodeError, setJoinCodeError] = useState("");
+    const [verifying, setVerifying] = useState(false);
 
     const handleStartRoomClick = () => {
         if (!roomName.trim()) {
@@ -67,6 +72,53 @@ function HeroPage({ onStartRoom }) {
     const handleModalClose = () => {
         setShowAliasModal(false);
         setAliasError("");
+    };
+
+    const extractRoomCode = (value) => {
+        const trimmed = value.trim();
+        const urlMatch = trimmed.match(/\/([A-Za-z0-9]{4,6})(?:\/|$)/);
+        if (urlMatch) return urlMatch[1].toUpperCase();
+        const clean = trimmed.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+        return clean.length === 4 ? clean : null;
+    };
+
+    const verifyRoomExists = async (code) => {
+        if (!isSupabaseConfigured) return true;
+        return new Promise((resolve) => {
+            const channel = supabase.channel(`room:${code}`);
+            let timeout;
+            channel
+                .on("broadcast", { event: "room-info" }, () => {
+                    clearTimeout(timeout);
+                    supabase.removeChannel(channel);
+                    resolve(true);
+                })
+                .subscribe(async (status) => {
+                    if (status !== "SUBSCRIBED") return;
+                    channel.send({ type: "broadcast", event: "request-info", payload: {} });
+                    timeout = setTimeout(() => {
+                        supabase.removeChannel(channel);
+                        resolve(false);
+                    }, 3000);
+                });
+        });
+    };
+
+    const handleJoinSession = async () => {
+        const code = extractRoomCode(joinCode);
+        if (!code) {
+            setJoinCodeError("Enter a valid 4-digit code or invite link");
+            return;
+        }
+        setJoinCodeError("");
+        setVerifying(true);
+        const exists = await verifyRoomExists(code);
+        setVerifying(false);
+        if (!exists) {
+            setJoinCodeError("Room not found");
+            return;
+        }
+        onJoinSession?.(code);
     };
 
     return (
@@ -127,7 +179,7 @@ function HeroPage({ onStartRoom }) {
 
                 <div className="flex flex-col items-center pt-8 text-center">
                     <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/60 px-4 py-1.5 text-sm text-neutral-600 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-neutral-300">
-                        <span className="h-1.5 w-1.5 rounded-full bg-neutral-900 dark:bg-white" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-600 dark:bg-green-500" />
                         No sign-up required
                     </span>
 
@@ -286,31 +338,41 @@ function HeroPage({ onStartRoom }) {
                             <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
                                 Join Existing
                             </h2>
-                            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                                Enter a shared session code to connect instantly.
-                            </p>
+                                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                                    Enter a 4-digit session code to connect instantly.
+                                </p>
 
                             {/* Access token */}
                             <div className="mt-6">
                                 <label className="mb-2 block text-center text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                                    Access Token
+                                    Access Token / Invite Link
                                 </label>
-                                <div className="flex items-center justify-center gap-3 rounded-xl border border-neutral-200 bg-white/50 py-4 dark:border-white/10 dark:bg-black/30">
-                                    {Array.from({ length: 6 }).map((_, i) => (
-                                        <input
-                                            key={i}
-                                            type="text"
-                                            maxLength={1}
-                                            placeholder="-"
-                                            className="flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-transparent text-center font-medium text-sm text-neutral-900 outline-none dark:border-white/10 dark:text-white"
-                                        />
-                                    ))}
+                                <div className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition-colors focus-within:ring-2 dark:bg-neutral-900 ${
+                                    joinCodeError ? "border-red-400 focus-within:border-red-400 focus-within:ring-red-200 dark:border-red-500/50" : "border-neutral-200 focus-within:border-neutral-400 focus-within:ring-neutral-200 dark:border-neutral-800"
+                                }`}>
+                                    <input
+                                        type="text"
+                                        value={joinCode}
+                                        onChange={(e) => {
+                                            setJoinCode(e.target.value);
+                                            if (e.target.value.trim()) setJoinCodeError("");
+                                        }}
+                                        placeholder="e.g. 1234 or /r/1234"
+                                        disabled={verifying}
+                                        className="w-full bg-transparent font-medium text-sm text-neutral-900 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 dark:text-white disabled:opacity-50"
+                                    />
                                 </div>
+                                {joinCodeError && (
+                                    <p className="mt-1 px-3 text-xs text-left text-red-500 dark:text-red-400">{joinCodeError}</p>
+                                )}
+                                {verifying && (
+                                    <p className="mt-1 px-3 text-xs text-left text-neutral-500 dark:text-neutral-400">Verifying room...</p>
+                                )}
                             </div>
 
                             {/* CTA */}
-                            <button className="mt-6 w-full cursor-pointer rounded-xl border border-neutral-200 bg-white py-3.5 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-white/5 dark:text-neutral-200 dark:hover:bg-white/10">
-                                Join Session
+                            <button onClick={handleJoinSession} disabled={verifying} className="mt-6 w-full cursor-pointer rounded-xl border border-neutral-200 bg-white py-3.5 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-white/5 dark:text-neutral-200 dark:hover:bg-white/10 disabled:opacity-50">
+                                {verifying ? "Verifying..." : "Join Session"}
                             </button>
 
                             {/* Verified protocol badge */}
