@@ -114,23 +114,35 @@ function App() {
     window.history.pushState({}, '', `/r/${roomCode}`);
   };
 
+  // Resolves to { status: "ok" | "full" | "not_found" }. maxParticipants and
+  // participantCount come from the room's own broadcast — the room creator is
+  // the only one who knows the real cap, so joiners always defer to it.
   const verifyRoomExists = async (code) => {
-    if (!isSupabaseConfigured) return true;
+    if (!isSupabaseConfigured) return { status: "ok" };
     return new Promise((resolve) => {
       const channel = supabase.channel(`room:${code}`);
       let timeout;
       channel
-        .on("broadcast", { event: "room-info" }, () => {
+        .on("broadcast", { event: "room-info" }, ({ payload }) => {
           clearTimeout(timeout);
           supabase.removeChannel(channel);
-          resolve(true);
+          const { maxParticipants: roomMax, participantCount } = payload || {};
+          if (
+            typeof roomMax === "number" &&
+            typeof participantCount === "number" &&
+            participantCount >= roomMax
+          ) {
+            resolve({ status: "full" });
+          } else {
+            resolve({ status: "ok" });
+          }
         })
         .subscribe(async (status) => {
           if (status !== "SUBSCRIBED") return;
           channel.send({ type: "broadcast", event: "request-info", payload: {} });
           timeout = setTimeout(() => {
             supabase.removeChannel(channel);
-            resolve(false);
+            resolve({ status: "not_found" });
           }, 3000);
         });
     });
@@ -149,16 +161,21 @@ function App() {
       return;
     }
     setJoinError("");
-    const exists = await verifyRoomExists(joinCode);
-    if (!exists) {
+    const result = await verifyRoomExists(joinCode);
+    if (result.status === "not_found") {
       setJoinError("Room not found");
+      return;
+    }
+    if (result.status === "full") {
+      setJoinError("Room is full");
       return;
     }
     setRoomConfig({
       alias: alias.trim(),
       roomName: `Room #${joinCode}`,
       durationSeconds: 300,
-      maxParticipants: 2,
+      // maxParticipants is intentionally omitted here — the real cap is unknown
+      // until ChatRoomPage receives it from the room's room-info broadcast.
       roomCode: joinCode,
       createdAt: null,
     });
