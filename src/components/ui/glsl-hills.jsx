@@ -3,7 +3,6 @@ import * as THREE from 'three';
 
 const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize = 256, speed = 0.5, dark = true }) => {
   const canvasRef = useRef(null);
-  const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const materialRef = useRef(null);
 
@@ -228,17 +227,10 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
   }, [dark]);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width, height }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
       <canvas
         ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          zIndex: 1
-        }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
       />
     </div>
   );
