@@ -183,7 +183,6 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
       camera.lookAt(new THREE.Vector3(0, 28 - tilt, 0));
 
       camera.updateProjectionMatrix();
-      console.log('resize fired', { aspect, tilt, fov: camera.fov }); // TEMP debug log
 
       renderer.setSize(w, h);
     };
@@ -199,6 +198,7 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
     };
 
     const init = () => {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(dark ? 0x0d0d0d : 0xffffff, 1);
       camera.position.set(0, 16, cameraZ);
