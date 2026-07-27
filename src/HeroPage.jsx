@@ -82,23 +82,36 @@ function HeroPage({ onStartRoom, onJoinSession }) {
         return clean.length === 4 ? clean : null;
     };
 
+    // Resolves to { status: "ok" | "full" | "not_found" }.
+    // The room itself is the source of truth for maxParticipants/participantCount —
+    // this component's own `maxParticipants` state (above) is only used when
+    // *creating* a room and is irrelevant when joining one.
     const verifyRoomExists = async (code) => {
-        if (!isSupabaseConfigured) return true;
+        if (!isSupabaseConfigured) return { status: "ok" };
         return new Promise((resolve) => {
             const channel = supabase.channel(`room:${code}`);
             let timeout;
             channel
-                .on("broadcast", { event: "room-info" }, () => {
+                .on("broadcast", { event: "room-info" }, ({ payload }) => {
                     clearTimeout(timeout);
                     supabase.removeChannel(channel);
-                    resolve(true);
+                    const { maxParticipants: roomMax, participantCount } = payload || {};
+                    if (
+                        typeof roomMax === "number" &&
+                        typeof participantCount === "number" &&
+                        participantCount >= roomMax
+                    ) {
+                        resolve({ status: "full" });
+                    } else {
+                        resolve({ status: "ok" });
+                    }
                 })
                 .subscribe(async (status) => {
                     if (status !== "SUBSCRIBED") return;
                     channel.send({ type: "broadcast", event: "request-info", payload: {} });
                     timeout = setTimeout(() => {
                         supabase.removeChannel(channel);
-                        resolve(false);
+                        resolve({ status: "not_found" });
                     }, 3000);
                 });
         });
@@ -112,10 +125,14 @@ function HeroPage({ onStartRoom, onJoinSession }) {
         }
         setJoinCodeError("");
         setVerifying(true);
-        const exists = await verifyRoomExists(code);
+        const result = await verifyRoomExists(code);
         setVerifying(false);
-        if (!exists) {
+        if (result.status === "not_found") {
             setJoinCodeError("Room not found");
+            return;
+        }
+        if (result.status === "full") {
+            setJoinCodeError("Room is full");
             return;
         }
         onJoinSession?.(code);

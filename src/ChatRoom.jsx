@@ -59,14 +59,32 @@ function ChatRoomPage({
   const [messages, setMessages] = useState([]);
   const messagesRef = useRef([]);
   const [participants, setParticipants] = useState([]);
+  const participantsRef = useRef([]);
   const [createdAt, setCreatedAt] = useState(createdAtProp);
   const [roomDuration, setRoomDuration] = useState(durationSeconds);
   const [closed, setClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
 
+  // The room creator knows the real cap immediately (via the `maxParticipants`
+  // prop); joiners start with the default and learn the real value from the
+  // room's own room-info broadcast. roomMaxParticipantsRef keeps the presence
+  // sync handler (defined once, inside the channel effect) reading the latest
+  // value instead of a stale closure.
+  const [roomMaxParticipants, setRoomMaxParticipants] = useState(maxParticipants);
+  const roomMaxParticipantsRef = useRef(maxParticipants);
+  const [roomFull, setRoomFull] = useState(false);
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  useEffect(() => {
+    participantsRef.current = participants;
+  }, [participants]);
+
+  useEffect(() => {
+    roomMaxParticipantsRef.current = roomMaxParticipants;
+  }, [roomMaxParticipants]);
 
   const scrollRef = useRef(null);
 
@@ -108,10 +126,23 @@ function ChatRoomPage({
         if (payload.durationSeconds) {
           setRoomDuration(payload.durationSeconds);
         }
+        if (typeof payload.maxParticipants === "number") {
+          roomMaxParticipantsRef.current = payload.maxParticipants;
+          setRoomMaxParticipants(payload.maxParticipants);
+        }
       })
       .on("broadcast", { event: "request-info" }, () => {
         if (createdAtRef.current) {
-          channel.send({ type: "broadcast", event: "room-info", payload: { createdAt: createdAtRef.current, durationSeconds: roomDuration } });
+          channel.send({
+            type: "broadcast",
+            event: "room-info",
+            payload: {
+              createdAt: createdAtRef.current,
+              durationSeconds: roomDuration,
+              maxParticipants: roomMaxParticipantsRef.current,
+              participantCount: participantsRef.current.length,
+            },
+          });
         }
       })
       .on("broadcast", { event: "room-closed" }, () => {
@@ -170,12 +201,39 @@ function ChatRoomPage({
         prevParticipantsRef.current = new Set(next.keys());
         prevAliasesRef.current = next;
         if (sys.length) setMessages((prev) => [...prev, ...sys]);
+
+        // Enforce the participant cap. Everyone sorts the presence list by
+        // joinedAt and checks their own position — whoever falls beyond the
+        // cap is the one who gets shown the "room is full" screen and is
+        // disconnected. This runs client-side on every sync so it also
+        // catches the case where two people join in a near-simultaneous race.
+        const effectiveMax = roomMaxParticipantsRef.current;
+        if (effectiveMax && people.length > effectiveMax) {
+          const sorted = [...people].sort((a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0));
+          const myIndex = sorted.findIndex((p) => p.senderId === senderId);
+          if (myIndex === -1 || myIndex >= effectiveMax) {
+            setRoomFull(true);
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+          }
+        }
       })
       .subscribe(async (status) => {
         if (status !== "SUBSCRIBED") return;
         await channel.track({ senderId, alias: aliasRef.current, joinedAt: Date.now() });
         if (createdAtRef.current) {
-          channel.send({ type: "broadcast", event: "room-info", payload: { createdAt: createdAtRef.current, durationSeconds: roomDuration } });
+          channel.send({
+            type: "broadcast",
+            event: "room-info",
+            payload: {
+              createdAt: createdAtRef.current,
+              durationSeconds: roomDuration,
+              maxParticipants: roomMaxParticipantsRef.current,
+              participantCount: participantsRef.current.length,
+            },
+          });
         } else {
           channel.send({ type: "broadcast", event: "request-info", payload: {} });
           // Fallback: if no one shares the room's createdAt, start our own clock
@@ -196,7 +254,7 @@ function ChatRoomPage({
 
   // Real, shared expiry — derived from the room's createdAt, not a local timer
   useEffect(() => {
-    if (closed || !createdAt) return;
+    if (closed || roomFull || !createdAt) return;
     const tick = () => {
       const left = Math.max(0, Math.round((createdAt + roomDuration * 1000 - Date.now()) / 1000));
       setTimeLeft(left);
@@ -213,7 +271,7 @@ function ChatRoomPage({
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [createdAt, roomDuration, closed]);
+  }, [createdAt, roomDuration, closed, roomFull]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
@@ -267,6 +325,28 @@ function ChatRoomPage({
     );
   }
 
+  if (roomFull) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+        <div className="absolute inset-0 z-0">
+          <GLSLHills dark={isDark} />
+        </div>
+        <div className="relative z-10 max-w-md rounded-2xl border border-neutral-200 bg-white/60 p-6 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.03]">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Room is full</h2>
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            This room already has {roomMaxParticipants} participant{roomMaxParticipants === 1 ? "" : "s"} — that's the limit set when it was created.
+          </p>
+          <button
+            onClick={onLeave}
+            className="mt-5 cursor-pointer rounded-xl bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const peopleHere = participants.length || (createdAt ? 1 : 0);
 
   return (
@@ -290,7 +370,7 @@ function ChatRoomPage({
                 {roomName || `Room #${roomCode}`}
               </p>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {peopleHere}/{maxParticipants} here
+                {peopleHere}/{roomMaxParticipants} here
               </p>
             </div>
           </div>
