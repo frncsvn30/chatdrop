@@ -501,7 +501,7 @@ function HeroPage({ onStartRoom, onJoinSession }) {
                 </main>
 
                 <footer className="flex flex-col items-center justify-between gap-2 border-t border-neutral-200/70 py-6 text-xs text-neutral-400 dark:border-white/10 dark:text-neutral-500 sm:flex-row">
-                    <span>Chatdrop</span>
+                    <span>Developed by Francis Vino</span>
                     <span>Rooms expire automatically. Nothing is stored.</span>
                 </footer>
             </div>
