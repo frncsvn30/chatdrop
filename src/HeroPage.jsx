@@ -189,10 +189,7 @@ function HeroPage({ onStartRoom, onJoinSession }) {
                 {/* header */}
                 <header className="flex items-center justify-between py-8 sm:py-10">
                     <div className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-neutral-900 text-xs font-bold text-white dark:bg-white dark:text-neutral-900">
-                            C
-                        </span>
-                        <span className="text-sm font-semibold tracking-tight">Chatdrop</span>
+                        <span className="text-md font-semibold tracking-tight">Chatdrop</span>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -504,7 +501,7 @@ function HeroPage({ onStartRoom, onJoinSession }) {
                 </main>
 
                 <footer className="flex flex-col items-center justify-between gap-2 border-t border-neutral-200/70 py-6 text-xs text-neutral-400 dark:border-white/10 dark:text-neutral-500 sm:flex-row">
-                    <span>Chatdrop</span>
+                    <span>Developed by Francis Vino</span>
                     <span>Rooms expire automatically. Nothing is stored.</span>
                 </footer>
             </div>
