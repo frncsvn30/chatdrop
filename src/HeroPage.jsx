@@ -189,10 +189,7 @@ function HeroPage({ onStartRoom, onJoinSession }) {
                 {/* header */}
                 <header className="flex items-center justify-between py-8 sm:py-10">
                     <div className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-neutral-900 text-xs font-bold text-white dark:bg-white dark:text-neutral-900">
-                            C
-                        </span>
-                        <span className="text-sm font-semibold tracking-tight">Chatdrop</span>
+                        <span className="text-md font-semibold tracking-tight">Chatdrop</span>
                     </div>
 
                     <div className="flex items-center gap-4">
